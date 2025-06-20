@@ -1,0 +1,15 @@
+{
+  "name": "dogwalk-service",
+  "version": "1.0.0",
+  "description": "Dog walking service backend",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mysql2": "^3.6.0",
+    "cookie-parser": "^1.4.6",
+    "morgan": "^1.10.0"
+  }
+}
