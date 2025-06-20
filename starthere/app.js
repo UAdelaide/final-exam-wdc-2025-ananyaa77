@@ -92,8 +92,8 @@ let db;
         ('alice123', 'alice@example.com', 'hashed123', 'owner'),
         ('bobwalker', 'bob@example.com', 'hashed456', 'walker'),
         ('carol123', 'carol@example.com', 'hashed789', 'owner'),
-        ('blarewalker', 'david@example.com', 'hashed321', 'walker'),
-        ('eveowner', 'eve@example.com', 'hashed654', 'owner');
+        ('blarewalker', 'blare@example.com', 'hashed321', 'walker'),
+        ('serenaowner', 'serena@example.com', 'hashed654', 'owner');
 
       INSERT INTO Dogs (owner_id, name, size) VALUES
         ((SELECT user_id FROM Users WHERE username='alice123'), 'Max', 'medium'),
