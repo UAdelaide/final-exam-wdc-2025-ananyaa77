@@ -2,74 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Dog of the Day - 🐶🐶🐶🐶🐶🐶🐶</title>
-  <script src="https://unpkg.com/vue@3"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dog of the Day</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <style>
     body {
-      background: linear-gradient(45deg, #ff69b4, #ffff00, #00ffcc);
-      font-family: Comic Sans MS;
-      font-size: 20px;
-      animation: blink 1s infinite;
-    }
-
-    @keyframes blink {
-      0% { background-color: #ff69b4; }
-      50% { background-color: #00ffcc; }
-      100% { background-color: #ff69b4; }
-    }
-
-    .container {
-      padding: 40px;
-      text-align: center;
-      color: yellow;
-    }
-
-    .dog-image {
-      width: 500px;
-      height: 400px;
-      border: 10px dotted red;
-    }
-
-    .no-keyboard {
-      cursor: crosshair;
-      user-select: none;
-    }
-
-    button {
-      padding: 20px;
-      font-size: 30px;
+      font-family: Arial, sans-serif;
       margin: 40px;
+      background-color: #f9f9f9;
+      text-align: center;
     }
-
-    .click-loads {
-      width: 50%;
-      margin: auto;
+    .dog-container {
+      margin-top: 20px;
     }
-
-    h1 {
-      font-size: 60px;
-      text-shadow: 3px 3px #000;
+    .dog-image {
+      max-width: 400px;
+      width: 90%;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    .button:hover {
+      background-color: #2980b9;
     }
   </style>
 </head>
 <body>
-  <div id="app" class="container">
-    <h1 tabindex="-1">✨DOG OF THE DAY✨</h1>
-
-    <!-- Image is decorative but not marked as such -->
-    <img :src="dogImage" class="dog-image" />
-
-    <!-- This button requires many clicks to load -->
-    <div class="click-loads">
-      <button @click="loadDog">Click 5 times to load new dog</button>
+  <div id="app">
+    <h1>🐶 Dog of the Day</h1>
+    <div class="dog-container">
+      <!-- ✅ Vue will dynamically replace :src -->
+      <img src="" :src="dogImage" alt="Picture of a random dog" class="dog-image" />
     </div>
-
-    <!-- Random gibberish info -->
-    <p class="no-keyboard" style="color:lime; background:black; padding:20px; font-size:28px;">
-      Dog's Mood: 🐾Happy 🐾Sleepy 🐾Hungry 🐾Lazy<br />
-      Breed: Unknown 🤷‍♀️ <br />
-      Activity Level: ✨Super Charged✨
-    </p>
+    <button class="button" @click="getRandomDog">Get Another Dog</button>
   </div>
 
   <script>
@@ -78,28 +52,22 @@
     createApp({
       data() {
         return {
-          dogImage: '',
-          clickCount: 0
+          dogImage: ""
         };
       },
-      mounted() {
-        this.fetchDog();
-      },
       methods: {
-        fetchDog() {
-          fetch('https://dog.ceo/api/breeds/image/random')
-            .then(res => res.json())
-            .then(data => {
-              this.dogImage = data.message;
-            });
-        },
-        loadDog() {
-          this.clickCount++;
-          if (this.clickCount >= 5) {
-            this.fetchDog();
-            this.clickCount = 0;
+        async getRandomDog() {
+          try {
+            const res = await fetch("https://dog.ceo/api/breeds/image/random");
+            const data = await res.json();
+            this.dogImage = data.message;
+          } catch (error) {
+            console.error("Failed to fetch dog image:", error);
           }
         }
+      },
+      mounted() {
+        this.getRandomDog();
       }
     }).mount('#app');
   </script>
