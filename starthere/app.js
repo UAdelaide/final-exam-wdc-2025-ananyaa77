@@ -91,7 +91,7 @@ let db;
         ('bobwalker','bob@example.com','hashed456','walker'),
         ('carol123','carol@example.com','hashed789','owner'),
         ('blarewalker','blarer@example.com','hashed000','walker'),
-        ('serenaowner','owx@example.com','hashed111','owner');
+        ('serenaowner','serena@example.com','hashed111','owner');
     `);
 
     await db.execute(`
