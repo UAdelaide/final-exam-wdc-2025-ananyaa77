@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dog of the Day - 🐶🐶🐶🐶🐶🐶🐶</title>
+  <script src="https://unpkg.com/vue@3"></script>
+  <style>
+    body {
+      background: linear-gradient(45deg, #ff69b4, #ffff00, #00ffcc);
+      font-family: Comic Sans MS;
+      font-size: 20px;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0% { background-color: #ff69b4; }
+      50% { background-color: #00ffcc; }
+      100% { background-color: #ff69b4; }
+    }
+
+    .container {
+      padding: 40px;
+      text-align: center;
+      color: yellow;
+    }
+
+    .dog-image {
+      width: 500px;
+      height: 400px;
+      border: 10px dotted red;
+    }
+
+    .no-keyboard {
+      cursor: crosshair;
+      user-select: none;
+    }
+
+    button {
+      padding: 20px;
+      font-size: 30px;
+      margin: 40px;
+    }
+
+    .click-loads {
+      width: 50%;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 60px;
+      text-shadow: 3px 3px #000;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="container">
+    <h1 tabindex="-1">✨DOG OF THE DAY✨</h1>
+
+    <!-- Image is decorative but not marked as such -->
+    <img :src="dogImage" class="dog-image" />
+
+    <!-- This button requires many clicks to load -->
+    <div class="click-loads">
+      <button @click="loadDog">Click 5 times to load new dog</button>
+    </div>
+
+    <!-- Random gibberish info -->
+    <p class="no-keyboard" style="color:lime; background:black; padding:20px; font-size:28px;">
+      Dog's Mood: 🐾Happy 🐾Sleepy 🐾Hungry 🐾Lazy<br />
+      Breed: Unknown 🤷‍♀️ <br />
+      Activity Level: ✨Super Charged✨
+    </p>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          dogImage: '',
+          clickCount: 0
+        };
+      },
+      mounted() {
+        this.fetchDog();
+      },
+      methods: {
+        fetchDog() {
+          fetch('https://dog.ceo/api/breeds/image/random')
+            .then(res => res.json())
+            .then(data => {
+              this.dogImage = data.message;
+            });
+        },
+        loadDog() {
+          this.clickCount++;
+          if (this.clickCount >= 5) {
+            this.fetchDog();
+            this.clickCount = 0;
+          }
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
