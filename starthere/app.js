@@ -1,29 +1,22 @@
 const express = require('express');
-const path = require('path');
-const cookieParser = require('cookie-parser');
-const logger = require('morgan');
 const mysql = require('mysql2/promise');
 
 const app = express();
-app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 
 let db;
 
 (async () => {
   try {
-    // ✅ Enable multipleStatements for setup queries
-    const connection = await mysql.createConnection({
+    // Connect and set up database and schema
+    const conn = await mysql.createConnection({
       host: 'localhost',
       user: 'root',
-      password: '', // Add your MySQL root password if needed
+      password: '',
       multipleStatements: true
     });
 
-    // ✅ Create and select database with schema setup
-    await connection.query(`
+    await conn.query(`
       DROP DATABASE IF EXISTS DogWalkService;
       CREATE DATABASE DogWalkService;
       USE DogWalkService;
@@ -41,8 +34,8 @@ let db;
         dog_id INT AUTO_INCREMENT PRIMARY KEY,
         owner_id INT NOT NULL,
         name VARCHAR(50) NOT NULL,
-        size ENUM('small', 'medium', 'large') NOT NULL,
-        FOREIGN KEY (owner_id) REFERENCES Users(user_id)
+        size ENUM('small','medium','large') NOT NULL,
+        FOREIGN KEY(owner_id) REFERENCES Users(user_id)
       );
 
       CREATE TABLE WalkRequests (
@@ -51,9 +44,9 @@ let db;
         requested_time DATETIME NOT NULL,
         duration_minutes INT NOT NULL,
         location VARCHAR(255) NOT NULL,
-        status ENUM('open', 'accepted', 'completed', 'cancelled') DEFAULT 'open',
+        status ENUM('open','accepted','completed','cancelled') DEFAULT 'open',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (dog_id) REFERENCES Dogs(dog_id)
+        FOREIGN KEY(dog_id) REFERENCES Dogs(dog_id)
       );
 
       CREATE TABLE WalkApplications (
@@ -61,10 +54,10 @@ let db;
         request_id INT NOT NULL,
         walker_id INT NOT NULL,
         applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        status ENUM('pending', 'accepted', 'rejected') DEFAULT 'pending',
-        FOREIGN KEY (request_id) REFERENCES WalkRequests(request_id),
-        FOREIGN KEY (walker_id) REFERENCES Users(user_id),
-        CONSTRAINT unique_application UNIQUE (request_id, walker_id)
+        status ENUM('pending','accepted','rejected') DEFAULT 'pending',
+        FOREIGN KEY(request_id) REFERENCES WalkRequests(request_id),
+        FOREIGN KEY(walker_id) REFERENCES Users(user_id),
+        CONSTRAINT unique_application UNIQUE(request_id, walker_id)
       );
 
       CREATE TABLE WalkRatings (
@@ -75,14 +68,15 @@ let db;
         rating INT CHECK (rating BETWEEN 1 AND 5),
         comments TEXT,
         rated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (request_id) REFERENCES WalkRequests(request_id),
-        FOREIGN KEY (walker_id) REFERENCES Users(user_id),
-        FOREIGN KEY (owner_id) REFERENCES Users(user_id),
-        CONSTRAINT unique_rating_per_walk UNIQUE (request_id)
+        FOREIGN KEY(request_id) REFERENCES WalkRequests(request_id),
+        FOREIGN KEY(walker_id) REFERENCES Users(user_id),
+        FOREIGN KEY(owner_id) REFERENCES Users(user_id),
+        CONSTRAINT unique_rating_per_walk UNIQUE(request_id)
       );
     `);
+    conn.end();
 
-    // ✅ Connect again but this time to the DogWalkService DB for queries
+    // Connect to use database
     db = await mysql.createConnection({
       host: 'localhost',
       user: 'root',
@@ -90,53 +84,59 @@ let db;
       database: 'DogWalkService'
     });
 
-    // ✅ Insert test data
-    await db.query(`
-      INSERT INTO Users (username, email, password_hash, role) VALUES
-        ('alice123', 'alice@example.com', 'hashed123', 'owner'),
-        ('bobwalker', 'bob@example.com', 'hashed456', 'walker'),
-        ('carol123', 'carol@example.com', 'hashed789', 'owner'),
-        ('blarewalker', 'david@example.com', 'hashed351', 'walker'),
-        ('serenaowner', 'eve@example.com', 'hashed642', 'owner');
-
-      INSERT INTO Dogs (owner_id, name, size) VALUES
-        ((SELECT user_id FROM Users WHERE username='alice123'), 'Max', 'medium'),
-        ((SELECT user_id FROM Users WHERE username='carol123'), 'Bella', 'small'),
-        ((SELECT user_id FROM Users WHERE username='serenaowner'), 'Rocky', 'large'),
-        ((SELECT user_id FROM Users WHERE username='blare123'), 'Luna', 'small'),
-        ((SELECT user_id FROM Users WHERE username='nate123'), 'Charlie', 'medium');
-
-      INSERT INTO WalkRequests (dog_id, requested_time, duration_minutes, location, status) VALUES
-        ((SELECT dog_id FROM Dogs WHERE name='Max'), '2025-06-10 08:00:00', 30, 'Parklands', 'open'),
-        ((SELECT dog_id FROM Dogs WHERE name='Bella'), '2025-06-10 09:30:00', 45, 'Beachside Ave', 'accepted'),
-        ((SELECT dog_id FROM Dogs WHERE name='Rocky'), '2025-06-11 10:00:00', 60, 'City Park', 'open'),
-        ((SELECT dog_id FROM Dogs WHERE name='Luna'), '2025-06-12 07:30:00', 20, 'Hilltop Trail', 'open'),
-        ((SELECT dog_id FROM Dogs WHERE name='Charlie'), '2025-06-13 14:00:00', 40, 'River Walk', 'cancelled');
-
-      INSERT INTO WalkApplications (request_id, walker_id, status) VALUES
-        (2, (SELECT user_id FROM Users WHERE username='bobwalker'), 'accepted');
-
-      INSERT INTO WalkRatings (request_id, walker_id, owner_id, rating, comments) VALUES
-        (2,
-         (SELECT user_id FROM Users WHERE username='bobwalker'),
-         (SELECT user_id FROM Users WHERE username='carol123'),
-         5,
-         'Great walker!');
+    // Insert test data
+    await db.execute(`
+      INSERT IGNORE INTO Users (username, email, password_hash, role) VALUES
+        ('alice123','alice@example.com','hashed123','owner'),
+        ('bobwalker','bob@example.com','hashed456','walker'),
+        ('carol123','carol@example.com','hashed789','owner'),
+        ('newwalker','newwalker@example.com','hashed000','walker'),
+        ('ownerx','ownerx@example.com','hashed111','owner');
     `);
 
-    console.log('✅ Database created and test data inserted.');
+    await db.execute(`
+      INSERT IGNORE INTO Dogs (owner_id, name, size) VALUES
+        ((SELECT user_id FROM Users WHERE username='alice123'),'Max','medium'),
+        ((SELECT user_id FROM Users WHERE username='carol123'),'Bella','small'),
+        ((SELECT user_id FROM Users WHERE username='ownerx'),'Rocky','large'),
+        ((SELECT user_id FROM Users WHERE username='alice123'),'Coco','small'),
+        ((SELECT user_id FROM Users WHERE username='carol123'),'Milo','medium');
+    `);
+
+    await db.execute(`
+      INSERT IGNORE INTO WalkRequests (dog_id, requested_time, duration_minutes, location, status) VALUES
+        ((SELECT dog_id FROM Dogs WHERE name='Max'),'2025-06-10 08:00:00',30,'Parklands','open'),
+        ((SELECT dog_id FROM Dogs WHERE name='Bella'),'2025-06-10 09:30:00',45,'Beachside Ave','accepted'),
+        ((SELECT dog_id FROM Dogs WHERE name='Rocky'),'2025-06-11 10:00:00',60,'City Park','completed'),
+        ((SELECT dog_id FROM Dogs WHERE name='Coco'),'2025-06-12 07:30:00',20,'Hilltop Trail','open'),
+        ((SELECT dog_id FROM Dogs WHERE name='Milo'),'2025-06-13 14:00:00',40,'River Walk','cancelled');
+    `);
+
+    await db.execute(`
+      INSERT IGNORE INTO WalkApplications (request_id, walker_id, status) VALUES
+        ((SELECT request_id FROM WalkRequests WHERE location='Beachside Ave'),
+         (SELECT user_id FROM Users WHERE username='bobwalker'),'accepted');
+    `);
+
+    await db.execute(`
+      INSERT IGNORE INTO WalkRatings (request_id, walker_id, owner_id, rating, comments) VALUES
+        ((SELECT request_id FROM WalkRequests WHERE location='Beachside Ave'),
+         (SELECT user_id FROM Users WHERE username='bobwalker'),
+         (SELECT user_id FROM Users WHERE username='carol123'),
+         5,'Excellent walk!');
+    `);
   } catch (err) {
-    console.error('❌ Error setting up database:', err.message);
+    console.error('❌ Error setup:', err.message);
   }
 })();
 
-// /api/dogs route
+// Route definitions
+
 app.get('/api/dogs', async (req, res) => {
   try {
     const [rows] = await db.execute(`
       SELECT d.name AS dog_name, d.size, u.username AS owner_username
-      FROM Dogs d
-      JOIN Users u ON d.owner_id = u.user_id
+      FROM Dogs d JOIN Users u ON d.owner_id = u.user_id
     `);
     res.json(rows);
   } catch (err) {
@@ -144,7 +144,6 @@ app.get('/api/dogs', async (req, res) => {
   }
 });
 
-// /api/walkrequests/open route
 app.get('/api/walkrequests/open', async (req, res) => {
   try {
     const [rows] = await db.execute(`
@@ -153,39 +152,34 @@ app.get('/api/walkrequests/open', async (req, res) => {
       FROM WalkRequests wr
       JOIN Dogs d ON wr.dog_id = d.dog_id
       JOIN Users u ON d.owner_id = u.user_id
-      WHERE wr.status = 'open'
+      WHERE wr.status='open'
     `);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch walk requests' });
+    res.status(500).json({ error: 'Failed to fetch open walk requests' });
   }
 });
 
-// /api/walkers/summary route
 app.get('/api/walkers/summary', async (req, res) => {
   try {
     const [rows] = await db.execute(`
       SELECT u.username AS walker_username,
              COUNT(r.rating_id) AS total_ratings,
-             ROUND(AVG(r.rating), 1) AS average_rating,
+             ROUND(AVG(r.rating),1) AS average_rating,
              (
-               SELECT COUNT(*)
-               FROM WalkRequests wr
+               SELECT COUNT(*) FROM WalkRequests wr
                JOIN WalkApplications wa ON wr.request_id = wa.request_id
-               WHERE wa.walker_id = u.user_id AND wr.status = 'completed' AND wa.status = 'accepted'
+               WHERE wa.walker_id = u.user_id AND wr.status='completed'
              ) AS completed_walks
       FROM Users u
       LEFT JOIN WalkRatings r ON u.user_id = r.walker_id
-      WHERE u.role = 'walker'
-      GROUP BY u.user_id
+      WHERE u.role='walker'
+      GROUP BY u.user_id;
     `);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch walker summaries' });
+    res.status(500).json({ error: 'Failed to fetch walker summary' });
   }
 });
 
-// Serve static files (optional)
-app.use(express.static(path.join(__dirname, 'public')));
-
-module.exports = app;
+app.listen(8080, () => console.log('🚀 Server running at http://localhost:8080'));
