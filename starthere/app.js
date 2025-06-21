@@ -98,7 +98,7 @@ let db;
       INSERT IGNORE INTO Dogs (owner_id, name, size) VALUES
         ((SELECT user_id FROM Users WHERE username='alice123'),'Max','medium'),
         ((SELECT user_id FROM Users WHERE username='carol123'),'Bella','small'),
-        ((SELECT user_id FROM Users WHERE username='ownerx'),'Rocky','large'),
+        ((SELECT user_id FROM Users WHERE username='serenaowner'),'Rocky','large'),
         ((SELECT user_id FROM Users WHERE username='alice123'),'Coco','small'),
         ((SELECT user_id FROM Users WHERE username='carol123'),'Milo','medium');
     `);
