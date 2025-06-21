@@ -90,7 +90,7 @@ let db;
         ('alice123','alice@example.com','hashed123','owner'),
         ('bobwalker','bob@example.com','hashed456','walker'),
         ('carol123','carol@example.com','hashed789','owner'),
-        ('newwalker','newwalker@example.com','hashed000','walker'),
+        ('blarewalker','newwalker@example.com','hashed000','walker'),
         ('ownerx','ownerx@example.com','hashed111','owner');
     `);
 
