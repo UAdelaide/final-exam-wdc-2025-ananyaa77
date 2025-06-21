@@ -90,8 +90,8 @@ let db;
         ('alice123','alice@example.com','hashed123','owner'),
         ('bobwalker','bob@example.com','hashed456','walker'),
         ('carol123','carol@example.com','hashed789','owner'),
-        ('blarewalker','blarer@example.com','hashed000','walker'),
-        ('serenaowner','serena@example.com','hashed111','owner');
+        ('blarewalker','blarer@example.com','hashed351','walker'),
+        ('serenaowner','serena@example.com','hashed642','owner');
     `);
 
     await db.execute(`
